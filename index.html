@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>均熱板 (Vapor Chamber) 技術介紹</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        /* 工業風格漸層：深色金屬感 */
+        .hero-gradient {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        }
+
+        .card-hover:hover {
+            transform: translateY(-5px);
+            transition: all 0.3s ease;
+        }
+
+        /* 蒸氣上升動畫 */
+        @keyframes steam-rise {
+            0% { transform: translateY(10px); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateY(-30px); opacity: 0; }
+        }
+        .steam-line {
+            animation: steam-rise 2.5s infinite linear;
+        }
+
+        /* 液體回流動畫 */
+        @keyframes liquid-flow {
+            0% { stroke-dashoffset: 20; }
+            100% { stroke-dashoffset: 0; }
+        }
+        .flow-line {
+            stroke-dasharray: 4;
+            animation: liquid-flow 1s infinite linear;
+        }
+
+        /* 熱源脈動 */
+        @keyframes pulse-red {
+            0% { opacity: 0.6; transform: scaleX(1); }
+            50% { opacity: 0.9; transform: scaleX(1.05); }
+            100% { opacity: 0.6; transform: scaleX(1); }
+        }
+        .heat-pulse {
+            transform-origin: center;
+            animation: pulse-red 2s infinite ease-in-out;
+        }
+
+        /* 工業風背景紋理 */
+        .industrial-bg {
+            background-color: #1a1a1a;
+            background-image: radial-gradient(#333 0.5px, transparent 0.5px);
+            background-size: 20px 20px;
+        }
+    </style>
+</head>
+<body class="bg-[#121212] text-gray-200">
+
+    <!-- 導航列：深色工業風 -->
+    <nav class="sticky top-0 z-50 bg-black/80 backdrop-blur-md border-b border-gray-800">
+        <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+            <span class="text-xl font-bold text-blue-500 flex items-center gap-2">
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9l-7-7z"/></svg>
+                VC Tech
+            </span>
+            <div class="hidden md:flex space-x-8 font-medium">
+                <a href="#definition" class="hover:text-blue-400 transition-colors">構造</a>
+                <a href="#principle" class="hover:text-blue-400 transition-colors">原理</a>
+                <a href="#design-params" class="hover:text-blue-400 transition-colors">設計參數</a>
+                <a href="#comparison" class="hover:text-blue-400 transition-colors">比較</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主視覺區 -->
+    <header class="hero-gradient text-white py-16 md:py-24 px-4 overflow-hidden relative border-b border-gray-800">
+        <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center relative z-10">
+            <div class="text-center md:text-left">
+                <h1 class="text-4xl md:text-6xl font-bold mb-6 tracking-tight"> <span class="text-blue-500">Vapor Chamber細部說明 V2.3</span></h1>
+                <p class="text-lg md:text-xl opacity-70 leading-relaxed mb-8">
+                    從點到面的熱擴散技術：實現高效散熱的核心組件，解決高效能運算中的熱點問題。
+                </p>
+                <div class="flex flex-wrap justify-center md:justify-start gap-4 mb-8">
+                    <span class="px-4 py-2 bg-blue-900/40 border border-blue-500/30 rounded-full text-sm font-mono text-blue-300">Two-Phase Cooling</span>
+                    <span class="px-4 py-2 bg-zinc-800/40 border border-zinc-500/30 rounded-full text-sm font-mono text-zinc-400">High Heat Flux</span>
+                </div>
+                
+                <!-- 影片連結按鈕 (已更新連結) -->
+                <div class="flex justify-center md:justify-start">
+                    <a href="https://youtu.be/CE4CrpBxHZs" target="_blank" class="flex items-center gap-3 px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-all shadow-lg hover:shadow-blue-500/20 group">
+                        <svg class="w-6 h-6 fill-current group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                        觀看 Vapor Chamber 說明影片
+                    </a>
+                </div>
+            </div>
+            <div class="relative flex justify-center">
+                <div class="relative p-2 bg-zinc-800 rounded-xl shadow-2xl border border-zinc-700">
+                    <img 
+                        src="https://celsiainc.com/wp-content/uploads/2019/12/how-vapor-chambers-work-graphic-1.png" 
+                        alt="均熱板運作圖解" 
+                        class="rounded-lg w-full h-auto max-w-[500px]"
+                        onerror="this.parentElement.innerHTML='<div class=\'p-12 text-zinc-500\'>Image Load Error</div>'"
+                    >
+                    <div class="absolute -bottom-4 -right-4 bg-blue-600 text-white text-[10px] px-2 py-1 rounded font-mono shadow-lg">SCHEMATIC DIAGRAM</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 構造剖析區 -->
+    <section id="definition" class="py-20 px-4 max-w-6xl mx-auto">
+        <h2 class="text-3xl font-bold mb-12 border-l-4 border-blue-500 pl-4 text-center md:text-left text-gray-100">相變循環與內部構造細節</h2>
+        
+        <div class="grid lg:grid-cols-5 gap-12 items-center">
+            <div class="lg:col-span-2 space-y-4">
+                <div class="p-6 bg-zinc-900 rounded-2xl shadow-lg border-l-8 border-red-600">
+                    <h3 class="font-bold text-lg text-red-500">1. 蒸發區 (Evaporator)</h3>
+                    <p class="text-sm text-gray-400">底部熱源處工作液吸收熱量，汽化成高速流動的蒸氣。</p>
+                </div>
+                <div class="p-6 bg-zinc-900 rounded-2xl shadow-lg border-l-8 border-blue-500">
+                    <h3 class="font-bold text-lg text-blue-400">2. 冷凝區 (Condenser)</h3>
+                    <p class="text-sm text-gray-400">蒸氣接觸低溫上蓋，釋放潛熱並冷凝成液滴。</p>
+                </div>
+                <div class="p-6 bg-zinc-900 rounded-2xl shadow-lg border-l-8 border-orange-500">
+                    <h3 class="font-bold text-lg text-orange-400">3. 毛細回流 (Wick Return)</h3>
+                    <p class="text-sm text-gray-400">利用燒結銅粉層的毛細力，將液體從周邊抽回熱源中心。</p>
+                </div>
+            </div>
+
+            <div class="lg:col-span-3 bg-zinc-800/50 p-8 rounded-3xl shadow-inner relative border border-zinc-700">
+                <div class="absolute top-4 left-4 text-[10px] font-mono text-zinc-500">INTERNAL CYCLE SIMULATION</div>
+                <svg viewBox="0 0 400 240" class="w-full h-auto drop-shadow-xl">
+                    <rect x="20" y="30" width="360" height="12" rx="2" fill="#78350f" />
+                    <rect x="20" y="42" width="360" height="138" fill="#18181b" opacity="0.9" />
+                    <rect x="100" y="42" width="8" height="138" fill="#3f3f46" />
+                    <rect x="292" y="42" width="8" height="138" fill="#3f3f46" />
+                    <g transform="translate(140, 160)">
+                        <path class="steam-line" d="M0 0 Q10 -20 0 -40" stroke="#ef4444" stroke-width="1.5" fill="none" />
+                        <path class="steam-line" d="M20 -10 Q30 -30 20 -50" stroke="#ef4444" stroke-width="1.5" fill="none" style="animation-delay: 0.5s" />
+                        <path class="steam-line" d="M120 0 Q110 -20 120 -40" stroke="#ef4444" stroke-width="1.5" fill="none" />
+                    </g>
+                    <path d="M30 50 L30 170 L150 170" stroke="#3b82f6" stroke-width="2" fill="none" class="flow-line" marker-end="url(#blue-arrow)" />
+                    <path d="M370 50 L370 170 L250 170" stroke="#3b82f6" stroke-width="2" fill="none" class="flow-line" marker-end="url(#blue-arrow)" />
+                    <defs>
+                        <pattern id="wickDots" x="0" y="0" width="3" height="3" patternUnits="userSpaceOnUse">
+                            <circle cx="1.5" cy="1.5" r="0.8" fill="#92400e" opacity="0.6" />
+                        </pattern>
+                        <marker id="blue-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto">
+                            <path d="M 0 0 L 10 5 L 0 10 z" fill="#3b82f6" />
+                        </marker>
+                    </defs>
+                    <rect x="20" y="170" width="360" height="10" fill="url(#wickDots)" />
+                    <rect x="20" y="180" width="360" height="12" rx="2" fill="#78350f" />
+                    <rect x="150" y="192" width="100" height="20" fill="#dc2626" class="heat-pulse" />
+                    <text x="178" y="206" fill="white" font-size="10" font-weight="bold">HOT SOURCE</text>
+                </svg>
+            </div>
+        </div>
+    </section>
+
+    <!-- 設計參數 -->
+    <section id="design-params" class="py-20 px-4 bg-[#0a0a0a]">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-bold mb-4 text-gray-100">細部設計關鍵參數</h2>
+                <p class="text-gray-500 max-w-2xl mx-auto">VC 的效能不僅取決於原理，更取決於以下精密工程參數的優化平衡。</p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="bg-zinc-900 p-8 rounded-3xl shadow-lg border border-zinc-800 card-hover">
+                    <div class="w-12 h-12 bg-blue-900/30 text-blue-500 rounded-2xl flex items-center justify-center mb-6">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                    </div>
+                    <h3 class="font-bold text-xl mb-3 text-gray-100">毛細結構孔隙率 (Porosity)</h3>
+                    <p class="text-sm text-gray-400 leading-relaxed mb-4">
+                        通常控制在 <span class="text-blue-500 font-bold">40% - 60%</span>。過高會降低毛細力導致回流不足；過低則會增加液體流動阻力。
+                    </p>
+                </div>
+
+                <div class="bg-zinc-900 p-8 rounded-3xl shadow-lg border border-zinc-800 card-hover">
+                    <div class="w-12 h-12 bg-green-900/30 text-green-500 rounded-2xl flex items-center justify-center mb-6">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.618.309a6 6 0 01-3.86.517l-3.158-.632a2 2 0 01-1.223-1.223L2.73 8.29a2 2 0 01.122-1.618l.811-1.352a2 2 0 011.618-.122l3.23.807a2 2 0 001.222-.122l.619-.309a2 2 0 011.222-.122l3.23.807a2 2 0 011.618.122l.811 1.352a2 2 0 01.122 1.618l-1.072 2.144a2 2 0 00-.122 1.222l.309.619a2 2 0 01.122 1.222l1.072 2.144a2 2 0 01-.122 1.618l-.811 1.352a2 2 0 01-1.618.122l-3.23-.807a2 2 0 00-1.222.122l-.619.309a2 2 0 01-1.222.122l-3.23-.807a2 2 0 01-1.618-.122l-.811-1.352a2 2 0 01-.122-1.618l1.072-2.144a2 2 0 00.122-1.222l-.309-.619a2 2 0 01-.122-1.222l-1.072-2.144z"></path></svg>
+                    </div>
+                    <h3 class="font-bold text-xl mb-3 text-gray-100">工作液充填量 (Charge Ratio)</h3>
+                    <p class="text-sm text-gray-400 leading-relaxed mb-4">
+                        典型值為 <span class="text-green-500 font-bold">110% - 130%</span>。充填不足易發生乾燒 (Dry-out)，過多則會淹沒蒸發區熱阻增加。
+                    </p>
+                </div>
+
+                <div class="bg-zinc-900 p-8 rounded-3xl shadow-lg border border-zinc-800 card-hover">
+                    <div class="w-12 h-12 bg-orange-900/30 text-orange-500 rounded-2xl flex items-center justify-center mb-6">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    </div>
+                    <h3 class="font-bold text-xl mb-3 text-gray-100">支撐柱結構 (Support Pillars)</h3>
+                    <p class="text-sm text-gray-400 leading-relaxed mb-4">
+                        在真空負壓下防止腔體變形。支撐柱的間距與直徑需在「結構強度」與「蒸氣擴散空間」間取平衡。
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 運作原理 -->
+    <section id="principle" class="bg-black text-white py-20 px-4">
+        <div class="max-w-6xl mx-auto">
+            <h2 class="text-3xl font-bold mb-16 text-center text-gray-100">循環運作原理</h2>
+            <div class="grid md:grid-cols-4 gap-8">
+                <div class="bg-zinc-900 border border-zinc-800 p-8 rounded-3xl card-hover">
+                    <div class="text-red-600 font-bold mb-4">STEP 01</div>
+                    <h3 class="font-bold text-xl mb-2 text-gray-200">熱端蒸發</h3>
+                    <p class="text-sm text-gray-500">底部液體受熱瞬間汽化，體積膨脹充滿整個腔體。</p>
+                </div>
+                <div class="bg-zinc-900 border border-zinc-800 p-8 rounded-3xl card-hover">
+                    <div class="text-blue-500 font-bold mb-4">STEP 02</div>
+                    <h3 class="font-bold text-xl mb-2 text-gray-200">等溫擴散</h3>
+                    <p class="text-sm text-gray-500">蒸氣在真空腔內迅速擴散，壓力推動熱量移向冷端。</p>
+                </div>
+                <div class="bg-zinc-900 border border-zinc-800 p-8 rounded-3xl card-hover">
+                    <div class="text-blue-600 font-bold mb-4">STEP 03</div>
+                    <h3 class="font-bold text-xl mb-2 text-gray-200">冷凝放熱</h3>
+                    <p class="text-sm text-gray-500">接觸冷蓋板後，蒸氣釋放潛熱轉化為水滴。</p>
+                </div>
+                <div class="bg-zinc-900 border border-zinc-800 p-8 rounded-3xl card-hover">
+                    <div class="text-green-600 font-bold mb-4">STEP 04</div>
+                    <h3 class="font-bold text-xl mb-2 text-gray-200">毛細力驅動</h3>
+                    <p class="text-sm text-gray-500">利用 Wick 結構的孔隙壓力，將液體抽回受熱源。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 比較表 -->
+    <section id="comparison" class="py-20 px-4 max-w-4xl mx-auto">
+        <h2 class="text-3xl font-bold mb-12 text-center text-gray-100">技術規格比較表</h2>
+        <div class="overflow-hidden bg-zinc-900 rounded-3xl shadow-2xl border border-zinc-800">
+            <table class="w-full text-left">
+                <thead class="bg-blue-900/50 text-blue-400">
+                    <tr>
+                        <th class="p-6">特性</th>
+                        <th class="p-6">Heat Pipe (熱導管)</th>
+                        <th class="p-6">Vapor Chamber (均熱板)</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-zinc-800 text-gray-300">
+                    <tr>
+                        <td class="p-6 font-bold text-zinc-500">傳熱維度</td>
+                        <td class="p-6">1D 線狀傳導</td>
+                        <td class="p-6 font-bold text-blue-400">2D 平面擴散</td>
+                    </tr>
+                    <tr>
+                        <td class="p-6 font-bold text-zinc-500">接觸熱阻</td>
+                        <td class="p-6">較高 (需多根組合)</td>
+                        <td class="p-6 font-bold text-blue-400">極低 (直接平面接觸)</td>
+                    </tr>
+                    <tr>
+                        <td class="p-6 font-bold text-zinc-500">薄型化極限</td>
+                        <td class="p-6">約 1.0mm</td>
+                        <td class="p-6 font-bold text-blue-400">可達 0.2mm - 0.4mm</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- 頁尾 -->
+    <footer class="bg-black text-white py-12 px-4 text-center border-t border-zinc-900">
+        <p class="text-zinc-600 text-sm">Created by Randy Chen &copy;2026 </p>
+    </footer>
+
+    <!-- 腳本區：包含右鍵停用功能 -->
+    <script>
+        // 停用滑鼠右鍵功能
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        }, false);
+
+        // MathJax 配置
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']]
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+</body>
+</html>
